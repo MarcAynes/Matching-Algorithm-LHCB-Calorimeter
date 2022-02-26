@@ -1,0 +1,14 @@
+
+*.log
+cmake-build-debug/CMakeFiles/*
+*.ninja
+*.exe
+cmake-build-debug/CMakeFiles/3.21.1/CompilerIdCXX/CMakeCXXCompilerId.cpp
+*.cmake
+*.xml
+*.xml
+.idea/.name
+cmake-build-debug/CMakeCache.txt
+*.xml
+.idea/modules.xml
+*.xml
