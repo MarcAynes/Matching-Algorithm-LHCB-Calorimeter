@@ -12,3 +12,5 @@ cmake-build-debug/CMakeCache.txt
 *.xml
 .idea/modules.xml
 *.xml
+*.csv
+*.iml
