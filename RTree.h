@@ -29,6 +29,9 @@ typedef struct leafNode{
 class RTree {
 private:
 
+    void insert(leafNode leaf){
+        
+    }
 
 public:
     /*
@@ -38,7 +41,15 @@ public:
      */
 
     void insert(vector<vector<hit>> data){
-
+        for (int i = 0; i < data.size(); i++){
+            for (int j = 0; j < data[i].size(); j++) {
+                leafNode newLeaf;
+                newLeaf.X = data[i][j].X;
+                newLeaf.Y = data[i][j].Y;
+                newLeaf.Hit = data[i][j];
+                insert(newLeaf);
+            }
+        }
     }
 };
 

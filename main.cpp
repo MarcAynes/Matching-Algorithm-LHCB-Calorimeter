@@ -1,8 +1,11 @@
 #include <iostream>
 #include "dataAcquisition.h"
+#include "RTree.h"
 
 int main() {
-    readFile("dataTrackMatch.csv");
+    RTree rTree;
+
+    rTree.insert(readFile("dataTrackMatch.csv"));
 
     return 0;
 }
