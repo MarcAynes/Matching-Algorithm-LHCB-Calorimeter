@@ -28,9 +28,14 @@ typedef struct leafNode{
 
 class RTree {
 private:
+    Node root{};
+
+    /*
+     * Recursive function where we will insert the leaf Node
+     */
 
     void insert(leafNode leaf){
-        
+
     }
 
 public:
@@ -50,6 +55,11 @@ public:
                 insert(newLeaf);
             }
         }
+    }
+
+    RTree(){
+        root.leaf = true;
+        root.node = nullptr;
     }
 };
 
