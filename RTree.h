@@ -35,8 +35,16 @@ private:
      * Recursive function where we will insert the leaf Node
      */
 
-    void insert(leafNode leaf){
-
+    void insert(leafNode leaf, Node* current){
+        if (current->leaf){                 //root is leaf
+            if (current->numNode < 5){      //if there is space
+                if (current->numNode == 0){ //it does not have info insered
+                    current->node = (leafNode*) malloc(sizeof (leafNode));
+                    current->numNode++;
+                    *((leafNode*) (current->node)) = leaf;
+                }
+            }
+        }
     }
 
 public:
@@ -53,7 +61,7 @@ public:
                 newLeaf.X = data[i][j].X;
                 newLeaf.Y = data[i][j].Y;
                 newLeaf.Hit = data[i][j];
-                insert(newLeaf);
+                insert(newLeaf, &root);
             }
         }
     }
