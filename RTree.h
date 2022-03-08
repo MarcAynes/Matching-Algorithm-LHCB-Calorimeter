@@ -45,7 +45,7 @@ private:
                     current->node = (leafNode*) malloc(sizeof (leafNode));
                     current->numNode++;
                     *((leafNode*) (current->node)) = leaf;
-                    current->yMin = leaf.Y;
+                    current->yMin = leaf.Y; //adding X and Y data
                     current->yMax = leaf.Y;
                     current->xMin = leaf.X;
                     current->xMax = leaf.X;
@@ -54,7 +54,7 @@ private:
                     current->node = (leafNode *) realloc(current->node, sizeof(leafNode) * (current->numNode));
                     ((leafNode *) (current->node))[(current->numNode) - 1] = leaf;
 
-                    if (current->xMax < leaf.X) {
+                    if (current->xMax < leaf.X) {   //modifying X and Y data if needed
                         current->xMax = leaf.X;
                         return;
                     }
