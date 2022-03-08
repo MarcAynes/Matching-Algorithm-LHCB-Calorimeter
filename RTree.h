@@ -17,6 +17,7 @@ typedef struct Node{
     double yMax;
     double xMin;
     double yMin;
+    short numNode;          //it could be a char for more memory optimization but the way C structures work it won't change the memory allocated
     bool leaf;              //bool leaf it's used to know if the next node (going down) it's a leaf node or a regular node
 }Node;
 
