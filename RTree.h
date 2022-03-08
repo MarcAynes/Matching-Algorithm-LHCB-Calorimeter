@@ -61,6 +61,11 @@ public:
     RTree(){
         root.leaf = true;
         root.node = nullptr;
+        root.numNode = 0;
+        root.xMax = -1;
+        root.xMin = -1;
+        root.yMax = -1;
+        root.yMin = -1;
     }
 };
 
