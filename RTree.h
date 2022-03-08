@@ -45,10 +45,26 @@ private:
                     current->node = (leafNode*) malloc(sizeof (leafNode));
                     current->numNode++;
                     *((leafNode*) (current->node)) = leaf;
+                    current->yMin = leaf.Y;
+                    current->yMax = leaf.Y;
+                    current->xMin = leaf.X;
+                    current->xMax = leaf.X;
                 }else{
                     current->numNode++;
                     current->node = (leafNode*) realloc(current->node,sizeof (leafNode)*(current->numNode));
                     ((leafNode*) (current->node))[(current->numNode) - 1] = leaf;
+
+                    if (current->xMax < leaf.X)
+                        current->xMax = leaf.X;
+
+                    if (current->xMin > leaf.X)
+                        current->xMin = leaf.X;
+
+                    if (current->yMax < leaf.Y)
+                        current->yMax = leaf.Y;
+
+                    if (current->yMin > leaf.Y)
+                        current->yMin = leaf.Y;
 
                     /*                                                  some prints for debug
                     if (current->numNode >= 3){
