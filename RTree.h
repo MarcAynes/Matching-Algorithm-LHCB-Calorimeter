@@ -1,6 +1,9 @@
 #ifndef MATCHINGALGORITHM_RTREE_H
 #define MATCHINGALGORITHM_RTREE_H
 
+#define m 3
+#define M 5
+
 #include "hit.h"
 #include <vector>
 
@@ -37,11 +40,25 @@ private:
 
     void insert(leafNode leaf, Node* current){
         if (current->leaf){                 //root is leaf
-            if (current->numNode < 5){      //if there is space
+            if (current->numNode < M){      //if there is space
                 if (current->numNode == 0){ //it does not have info insered
                     current->node = (leafNode*) malloc(sizeof (leafNode));
                     current->numNode++;
                     *((leafNode*) (current->node)) = leaf;
+                }else{
+                    current->numNode++;
+                    current->node = (leafNode*) realloc(current->node,sizeof (leafNode)*(current->numNode));
+                    ((leafNode*) (current->node))[(current->numNode) - 1] = leaf;
+
+                    /*                                                  some prints for debug
+                    if (current->numNode >= 3){
+                        int a = 0;
+                        while (a < current->numNode){
+                            printf("id - %d\n", ((leafNode*)current->node)[a].Hit.id);
+                            a++;
+                    }
+                    */
+                    }
                 }
             }
         }
