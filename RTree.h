@@ -49,22 +49,30 @@ private:
                     current->yMax = leaf.Y;
                     current->xMin = leaf.X;
                     current->xMax = leaf.X;
-                }else{
+                }else {
                     current->numNode++;
-                    current->node = (leafNode*) realloc(current->node,sizeof (leafNode)*(current->numNode));
-                    ((leafNode*) (current->node))[(current->numNode) - 1] = leaf;
+                    current->node = (leafNode *) realloc(current->node, sizeof(leafNode) * (current->numNode));
+                    ((leafNode *) (current->node))[(current->numNode) - 1] = leaf;
 
-                    if (current->xMax < leaf.X)
+                    if (current->xMax < leaf.X) {
                         current->xMax = leaf.X;
+                        return;
+                    }
 
-                    if (current->xMin > leaf.X)
+                    if (current->xMin > leaf.X) {
                         current->xMin = leaf.X;
+                        return;
+                    }
 
-                    if (current->yMax < leaf.Y)
+                    if (current->yMax < leaf.Y) {
                         current->yMax = leaf.Y;
+                        return;
+                    }
 
-                    if (current->yMin > leaf.Y)
+                    if (current->yMin > leaf.Y) {
                         current->yMin = leaf.Y;
+                        return;
+                    }
 
                     /*                                                  some prints for debug
                     if (current->numNode >= 3){
