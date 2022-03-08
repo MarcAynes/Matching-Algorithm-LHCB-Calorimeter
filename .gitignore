@@ -14,3 +14,5 @@ cmake-build-debug/CMakeCache.txt
 *.xml
 *.iml
 dataTrackMatch.csv
+cmake-build-debug/.ninja_log
+cmake-build-debug/.ninja_deps
