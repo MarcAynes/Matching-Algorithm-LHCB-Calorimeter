@@ -72,9 +72,9 @@ private:
                         while (a < current->numNode){
                             printf("id - %d\n", ((leafNode*)current->node)[a].Hit.id);
                             a++;
+                        }
                     }
-                    */
-                    }
+                     */
                 }
             }
         }
