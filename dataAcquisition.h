@@ -25,34 +25,46 @@ vector<vector<hit>> readFile(string fileName){
             int j = 0;
             hit hitData;
 
-            while(getline(str, word, ',')) {
+            data.emplace_back();
+
+            while(getline(str, word, ',')) {        //read line from csv
+                if(element == 5){
+                    element++;
+                    hitData.MeVs = stod(word);
+                    data[i].push_back(hitData);
+                    continue;
+                }
+
+                if(element == 4){
+                    element++;
+                    hitData.Z = stod(word);
+                    continue;
+                }
+
+                if(element == 3){
+                    element++;
+                    hitData.Y = stod(word);
+                    continue;
+                }
+
+                if(element == 2){
+                    element++;
+                    hitData.X = stod(word);
+                    continue;
+                }
+
+                if (element == 1){
+                    element++;
+                    hitData.id = stoi(word);
+                    continue;
+                }
+
                 if (word[0] == 'C' && element == 0) {
                     element++;
 
                 } else if(element == 0) {
                     i++;
                     break;
-                }
-
-                if(element == 1){
-                    element++;
-                    hitData.X = stod(word);
-                }
-
-                if(element == 2){
-                    element++;
-                    hitData.Y = stod(word);
-                }
-
-                if(element == 3){
-                    element++;
-                    hitData.Z = stod(word);
-                }
-
-                if(element == 4){
-                    element++;
-                    hitData.MeVs = stod(word);
-                    data[i].push_back(hitData);
                 }
             }
         }

@@ -5,7 +5,7 @@
 int main() {
     RTree rTree;
 
-    rTree.insert(readFile("dataTrackMatch.csv"));
+    rTree.insert(readFile("./../dataTrackMatch.csv"));
 
     return 0;
 }

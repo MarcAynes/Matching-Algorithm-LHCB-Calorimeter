@@ -8,6 +8,7 @@ public:
     double Y;
     double Z;
     double MeVs;
+    int id;
 };
 
 
