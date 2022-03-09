@@ -6,6 +6,7 @@
 
 #include "hit.h"
 #include <vector>
+#include <float.h>
 
 using namespace std;
 
@@ -49,7 +50,7 @@ private:
                     current->yMax = leaf.Y;
                     current->xMin = leaf.X;
                     current->xMax = leaf.X;
-                }else {
+                }else {                     //does have info inserted
                     current->numNode++;
                     current->node = (leafNode *) realloc(current->node, sizeof(leafNode) * (current->numNode));
                     ((leafNode *) (current->node))[(current->numNode) - 1] = leaf;
@@ -84,7 +85,45 @@ private:
                     }
                      */
                 }
+            }else{      // there is not space space
+
             }
+        }else{          //it is not leaf node
+            double newArea = DBL_MAX;
+            int insertIndex = 0;
+            for (int i = 0; i < current->numNode; i++){ //iterate over all nodes
+                double nMaxX = ((Node*) current->node)[i].xMax, nMaxY = ((Node*) current->node)[i].yMax, nMinX = ((Node*) current->node)[i].xMin, nMinY = ((Node*) current->node)[i].yMin;
+
+                if (((Node*) current->node)[i].xMin > leaf.X){  //compare the new point with every rectangle to know how much will increase the new area
+                    nMinX = leaf.X;
+                }
+
+                if (((Node*) current->node)[i].yMin > leaf.Y){
+                    nMinY = leaf.Y;
+                }
+
+                if (((Node*) current->node)[i].xMax < leaf.X){
+                    nMaxX = leaf.X;
+                }
+
+                if (((Node*) current->node)[i].yMax < leaf.Y){
+                    nMaxY = leaf.Y;
+                }
+
+                //calculate the are increased = new total area - old area
+                double newAreaCreated = (nMaxY-nMinY)*(nMaxX-nMinX) - (((Node*) current->node)[i].xMax - ((Node*) current->node)[i].xMin)*(((Node*) current->node)[i].yMax - ((Node*) current->node)[i].yMin) ;
+                if (newAreaCreated < newArea){  //insert in the minimum area created
+                    newArea = newAreaCreated;
+                    insertIndex = i;
+                }else if (newAreaCreated == newArea){ //if equals insert in the smallest old area
+                    if ((((Node*) current->node)[i].xMax - ((Node*) current->node)[i].xMin)*(((Node*) current->node)[i].yMax - ((Node*) current->node)[i].yMin) < (((Node*) current->node)[insertIndex].xMax - ((Node*) current->node)[insertIndex].xMin)*(((Node*) current->node)[insertIndex].yMax - ((Node*) current->node)[insertIndex].yMin)){
+                        insertIndex = i;
+                    }
+                }
+            }
+            insert(leaf, &(((Node*) current->node)[insertIndex]));
+            //back propagation
+            
         }
     }
 
