@@ -18,6 +18,7 @@ using namespace std;
 
 typedef struct Node{
     void* node;
+    void* parentNode;
     double xMax;
     double yMax;
     double xMin;
@@ -94,7 +95,7 @@ private:
                      */
                 }
             }else{      // there is not space
-                int index1 = 0, index2 = 0;
+                int index1 = 0, index2 = 0;         //2 farthest points in the rectangle
                 double dist = DBL_MAX;
                 for (int i = 0; i < current->numNode; i++) {     //O(N^2) cost at finding 2 furthest points, but for 6 points it's not critical
                     for (int j = i + 1; j < current->numNode; j++) {
@@ -108,6 +109,36 @@ private:
                             dist = auxDist;
                         }
                     }
+                }
+
+                double dist1 = DBL_MAX, ind1 = 0; //2 elements closest to index1 both used to create the minimum rectangle
+                double dist2 = DBL_MAX, ind2 = 0;
+
+                for (int i = 0; i < current->numNode; i++){ //linear search for 2 elements closest to index1
+                    if (i == index1 || i == index2){
+                        continue;
+                    }
+
+                    double auxDist = euclideanDistance(((leafNode*)current->node)[i].X, ((leafNode*)current->node)[i].Y, ((leafNode*)current->node)[index1].X, ((leafNode*)current->node)[index1].Y);
+                    if (auxDist < dist1){   //point i is nearest than previous one (1)
+                        if (dist1 < dist2){ //point (1) is nearest than (2)
+                            dist2 = dist1;
+                            ind2 = ind1;
+                        }
+                        dist1 = auxDist;
+                        ind1 = i;
+                    }
+
+                    if (auxDist < dist2){
+                        dist2 = auxDist;
+                        ind2 = i;
+                    }
+                }
+
+                if (current->parentNode == nullptr){
+
+                }else{
+
                 }
 
                 /*current->numNode++;
@@ -210,6 +241,7 @@ public:
         root.xMin = -1;
         root.yMax = -1;
         root.yMin = -1;
+        root.parentNode = nullptr;
     }
 };
 
