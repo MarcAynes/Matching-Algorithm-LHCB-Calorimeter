@@ -98,12 +98,13 @@ private:
                 ((leafNode*) current->node)[current->numNode].Hit = leaf.Hit;
                 ((leafNode*) current->node)[current->numNode].X = leaf.X;
                 ((leafNode*) current->node)[current->numNode].Y = leaf.Y;
+                current->numNode++;
                 int index1 = 0, index2 = 0;
 
                 //find the 2 farthest points in the rectangle
                 double dist = DBL_MAX;
-                for (int i = 0; i <= current->numNode; i++) {     //O(N^2) cost at finding 2 furthest points, but for 6 points it's not critical
-                    for (int j = i + 1; j <= current->numNode; j++) {
+                for (int i = 0; i < current->numNode; i++) {     //O(N^2) cost at finding 2 furthest points, but for 6 points it's not critical
+                    for (int j = i + 1; j < current->numNode; j++) {
                         double auxDist = euclideanDistance(((leafNode *) current->node)[i].X,
                                                            ((leafNode *) current->node)[i].Y,
                                                            ((leafNode *) current->node)[j].X,
@@ -121,7 +122,7 @@ private:
                 double dist2 = DBL_MAX;
                 int ind1 = 0, ind2 = 0;
 
-                for (int i = 0; i <= current->numNode; i++){ //linear search for 2 elements closest to index1
+                for (int i = 0; i < current->numNode; i++){ //linear search for 2 elements closest to index1
                     if (i == index1 || i == index2){
                         continue;
                     }
@@ -143,25 +144,25 @@ private:
                     }
                 }
 
+                //find the 2 other points which they will make the second rectangle
+                int ind3 = -1, ind4 = -1;
+                for (int i = 0; i < M + 1; i++){
+                    if ((i == index1 || i == index2 || i == ind2 || i == ind1)) {
+                        if (ind3 < 0) {
+                            ind3 = i;
+                        }else{
+                            ind4 = i;
+                            break;
+                        }
+                    }
+                }
+
                 if (current->parentNode == nullptr){ // if the Node it's root
                     leafNode* auxNodes = (leafNode*) current->node;
                     current->node = nullptr;
                     current->node = (Node*) malloc(sizeof(Node)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we doa realloc we can lose the parent*
                     current->numNode = 2;
                     current->leaf = false;
-
-                    //find the 2 other points which they will make the second rectangle
-                    int ind3 = -1, ind4 = -1;
-                    for (int i = 0; i < M + 1; i++){
-                        if ((i == index1 || i == index2 || i == ind2 || i == ind1)) {
-                            if (ind3 < 0) {
-                                ind3 = i;
-                            }else{
-                                ind4 = i;
-                                break;
-                            }
-                        }
-                    }
 
                     //for each new rectangle insert m (3) leaf nodes
                     for (int j = 0; j < current->numNode; j++) {
@@ -238,8 +239,20 @@ private:
                             }
                         }
                     }
-                }else{  //node is not root
 
+                    free(auxNodes); //free copied data
+                }else{  //node is not root
+                    //It is not important if we insert in a full (5 nodes)
+                    //parent a new node due to when we exit this function, because it's recursive, we will be in the case
+                    //where we need to rotate nodes
+                    leafNode* auxNodes = (leafNode*) current->node;
+                    current->node = nullptr;
+                    current->node = (leafNode *) malloc(sizeof(leafNode)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we doa realloc we can lose the parent*
+                    current->parentNode->numNode++;         // this is important if numNodes > M we must split when we exit the function
+
+                    //we have index to the current position and the new rectangle in the last parnet->node position created
+                    int currentIndexInParent = (int) (current - ((Node*) current->parentNode->node));
+                    //now we need to divide the M+1 leafs into those 2 nodes. m elements each one.
                 }
             }
         }else{          //it is not leaf node
