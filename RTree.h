@@ -1,15 +1,15 @@
 #ifndef MATCHINGALGORITHM_RTREE_H
 #define MATCHINGALGORITHM_RTREE_H
 
-#define m 3
-#define M 5
-
 #include "hit.h"
 #include <vector>
-#include <float.h>
+#include <cfloat>
 #include <bits/stdc++.h>
 
 using namespace std;
+
+#define m 3
+#define M 5
 
 /*
  * R-Tree Data structure
@@ -42,6 +42,22 @@ private:
         // Calculating distance
         return sqrt(pow(x2 - x1, 2) +
                     pow(y2 - y1, 2));
+    }
+
+    /*
+     * Returns: Area of the rectangle needed to insert 2 little rectangle minus both areas of the little rectangles
+     */
+    double extraArea(Node littleRectangleA, Node littleRectangleB){
+        double xMin = littleRectangleA.xMin < littleRectangleB.xMin ? littleRectangleA.xMin : littleRectangleB.xMin;
+        double yMin = littleRectangleA.yMin < littleRectangleB.yMin ? littleRectangleA.yMin : littleRectangleB.yMin;
+        double xMax = littleRectangleA.xMax > littleRectangleB.xMax ? littleRectangleA.xMax : littleRectangleB.xMax;
+        double yMax = littleRectangleA.yMax > littleRectangleB.yMax ? littleRectangleA.yMax : littleRectangleB.yMax;
+
+        double totalArea = (xMax - xMin) * (yMax - yMin);
+        double areaA = (littleRectangleA.xMax - littleRectangleA.xMin) * (littleRectangleA.yMax - littleRectangleA.yMin);
+        double areaB = (littleRectangleB.xMax - littleRectangleB.xMin) * (littleRectangleB.yMax - littleRectangleB.yMin);
+
+        return totalArea - areaA - areaB;
     }
 
     /*
@@ -102,14 +118,14 @@ private:
                 int index1 = 0, index2 = 0;
 
                 //find the 2 farthest points in the rectangle
-                double dist = DBL_MAX;
+                double dist = DBL_MIN;
                 for (int i = 0; i < current->numNode; i++) {     //O(N^2) cost at finding 2 furthest points, but for 6 points it's not critical
                     for (int j = i + 1; j < current->numNode; j++) {
                         double auxDist = euclideanDistance(((leafNode *) current->node)[i].X,
                                                            ((leafNode *) current->node)[i].Y,
                                                            ((leafNode *) current->node)[j].X,
                                                            ((leafNode *) current->node)[j].Y);
-                        if (auxDist < dist) {
+                        if (auxDist > dist) {
                             index1 = i;
                             index2 = j;
                             dist = auxDist;
@@ -301,13 +317,132 @@ private:
                     }
                 }
             }
-            insert(leaf, &(((Node*) current->node)[insertIndex]));
+            insert(leaf, &(((Node*) current->node)[insertIndex]));  //recursive call
             //back propagation
             //modify X and Y limits if leaf node it's outside the actual rectangle
             current->xMin = current->xMin > leaf.X ? leaf.X : current->xMin;
             current->yMin = current->yMin > leaf.Y ? leaf.Y : current->yMin;
             current->xMax = current->xMax < leaf.X ? leaf.X : current->xMax;
             current->yMax = current->yMax < leaf.Y ? leaf.Y : current->yMax;
+
+            if (current->numNode > M){ //we have M+1 Nodes, we need to split
+                Node* auxNodes = (Node*) current->node;
+                current->node = nullptr;
+                int currentIndexInParent;
+
+                double area = DBL_MIN;
+                int index1 = 0, index2 = 0;
+                for (int i = 0; i < current->numNode; i++) {     //O(N^2) cost at finding 2 furthest rectangles, but for 6 rectangles it's not critical
+                    for (int j = i + 1; j < current->numNode; j++) {
+                        double auxArea = extraArea(((Node*) current->node)[i], ((Node*) current->node)[j]);
+                        if (auxArea > area) {
+                            index1 = i;
+                            index2 = j;
+                            area = auxArea;
+                        }
+                    }
+                }
+
+                //find the 2 rectangles closest to index1 both used to create the minimum rectangle possible
+                double area1 = DBL_MAX;
+                double area2 = DBL_MAX;
+                int ind1 = 0, ind2 = 0;
+
+                for (int i = 0; i < current->numNode; i++){ //linear search for 2 elements closest to index1
+                    if (i == index1 || i == index2){
+                        continue;
+                    }
+
+                    double auxArea = extraArea(((Node *)current->node)[i], ((Node*)current->node)[index1]);
+                    if (auxArea < area1){   //rectangle i is nearest than previous one (1)
+                        if (area1 < area2){ //rectangle (1) is nearest than (2)
+                            area2 = area1;
+                            ind2 = ind1;
+                        }
+                        area1 = auxArea;
+                        ind1 = i;
+                        continue;
+                    }
+
+                    if (auxArea < area2){
+                        area2 = auxArea;
+                        ind2 = i;
+                    }
+                }
+
+                //find the 2 other points which they will make the second rectangle
+                int ind3 = -1, ind4 = -1;
+                for (int i = 0; i < M + 1; i++){
+                    if ((i == index1 || i == index2 || i == ind2 || i == ind1)) {
+                        if (ind3 < 0) {
+                            ind3 = i;
+                        }else{
+                            ind4 = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (current->parentNode == nullptr){ // root node splitting root node in 2, creating new nodes
+                    current->node = (Node*) malloc(sizeof(Node)*(M+1));
+                    current->numNode = 2;
+                    current->leaf = false;
+
+                    for (int j = 0; j < 2; j++){
+                        //initializing each new Node
+                        ((Node*) current->node)[j].yMin = DBL_MIN;
+                        ((Node*) current->node)[j].xMin = DBL_MIN;
+                        ((Node*) current->node)[j].xMax = DBL_MAX;
+                        ((Node*) current->node)[j].yMax = DBL_MAX;
+                        ((Node*) current->node)[j].node = (Node *) malloc(sizeof(Node)*(M + 1));
+                        ((Node*) current->node)[j].numNode = 0;
+                        ((Node*) current->node)[j].leaf = false;
+                        ((Node*) current->node)[j].parentNode = current;
+
+                        for (int i = 0; i < m; i++) {
+                            int ind = j == 0 ? i == 0 ? index1 : i == 1 ? ind1 : ind2     :     i == 0 ? index2 : i == 1 ? ind3 : ind4 ;
+
+                            //copying each child Node to its new parent Node (Node)
+                            ((Node*) current->node)[j].numNode++; //rectangle have +1 leaf node (data point)
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMax = auxNodes[ind].xMax;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMin = auxNodes[ind].xMin;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].leaf = auxNodes[ind].node;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].parentNode = &(((Node*) current->node)[j]);
+
+                            //modifying rectangle boundaries if needed
+                            if (((Node*) current->node)[j].xMax < auxNodes[ind].xMax) {
+                                ((Node*) current->node)[j].xMax = auxNodes[ind].xMax;
+                            }
+
+                            if (((Node*) current->node)[j].xMin > auxNodes[ind].xMin) {
+                                ((Node*) current->node)[j].xMin = auxNodes[ind].xMin;
+                            }
+
+                            if (((Node*) current->node)[j].yMax < auxNodes[ind].yMax) {
+                                ((Node*) current->node)[j].yMax = auxNodes[ind].yMax;
+                            }
+
+                            if (((Node*) current->node)[j].yMin > auxNodes[ind].yMin) {
+                                ((Node*) current->node)[j].yMin = auxNodes[ind].yMin;
+                            }
+                        }
+                    }
+                    //modify current (root) rectangle size. Must include both new nodes
+                    current->xMin = ((Node*) current->node)[0].xMin < ((Node*) current->node)[1].xMin ? ((Node*) current->node)[0].xMin : ((Node*) current->node)[1].xMin;
+                    current->yMin = ((Node*) current->node)[0].yMin < ((Node*) current->node)[1].yMin ? ((Node*) current->node)[0].yMin : ((Node*) current->node)[1].yMin;
+                    current->xMax = ((Node*) current->node)[0].xMax > ((Node*) current->node)[1].xMax ? ((Node*) current->node)[0].xMax : ((Node*) current->node)[1].xMax;
+                    current->xMax = ((Node*) current->node)[0].yMax > ((Node*) current->node)[1].yMax ? ((Node*) current->node)[0].yMax : ((Node*) current->node)[1].yMax;
+
+                }else{ //not root node
+
+                }
+
+                free(auxNodes);
+            }
         }
     }
 
@@ -317,7 +452,6 @@ public:
      * add all data to the data structure,
      * Using recursive function be aware of the stack used and the stack available
      */
-
     void insert(vector<vector<hit>> data){
         for (int i = 0; i < data.size(); i++){
             for (int j = 0; j < data[i].size(); j++) {
