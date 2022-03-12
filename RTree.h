@@ -303,7 +303,11 @@ private:
             }
             insert(leaf, &(((Node*) current->node)[insertIndex]));
             //back propagation
-
+            //modify X and Y limits if leaf node it's outside the actual rectangle
+            current->xMin = current->xMin > leaf.X ? leaf.X : current->xMin;
+            current->yMin = current->yMin > leaf.Y ? leaf.Y : current->yMin;
+            current->xMax = current->xMax < leaf.X ? leaf.X : current->xMax;
+            current->yMax = current->yMax < leaf.Y ? leaf.Y : current->yMax;
         }
     }
 
