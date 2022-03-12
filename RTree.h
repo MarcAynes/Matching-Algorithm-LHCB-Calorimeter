@@ -157,15 +157,20 @@ private:
                     }
                 }
 
+                //It is not important if we insert in a full (5 nodes) parent a new node
+                //due to when we exit this function, because it's recursive, we will be in the case
+                //where we need to rotate nodes (split)
+                leafNode* auxNodes = (leafNode*) current->node;
+                current->node = nullptr;
+                int currentIndexInParent;
+
                 if (current->parentNode == nullptr){ // if the Node it's root
-                    leafNode* auxNodes = (leafNode*) current->node;
-                    current->node = nullptr;
-                    current->node = (Node*) malloc(sizeof(Node)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we doa realloc we can lose the parent*
+                    current->node = (Node*) malloc(sizeof(Node)*(M+1));
                     current->numNode = 2;
                     current->leaf = false;
 
                     //for each new rectangle insert m (3) leaf nodes
-                    for (int j = 0; j < current->numNode; j++) {
+                    for (int j = 0; j < 2; j++){
                         //initializing each new Node
                         ((Node*) current->node)[j].yMin = DBL_MIN;
                         ((Node*) current->node)[j].xMin = DBL_MIN;
@@ -176,50 +181,14 @@ private:
                         ((Node*) current->node)[j].leaf = true;
                         ((Node*) current->node)[j].parentNode = current;
 
-                        //adding working data of the leaf nodes
                         for (int i = 0; i < m; i++) {
-                            int ind;
-                            switch (j) {
-                                case 0:
-                                    switch (i) {
-                                        case 0:
-                                            ind = index1;
-                                            break;
-                                        case 1:
-                                            ind = ind1;
-                                            break;
-                                        case 2:
-                                            ind = ind2;
-                                            break;
-                                        default:
-                                            ind = index1;
-                                            break;
-                                    }
-                                    break;
-                                default:
-                                    switch (i) {
-                                        case 0:
-                                            ind = index2;
-                                            break;
-                                        case 1:
-                                            ind = ind3;
-                                            break;
-                                        case 2:
-                                            ind = ind4;
-                                            break;
-                                        default:
-                                            ind = index2;
-                                            break;
-                                    }
-                                    break;
-
-                            }
+                            int ind = j == 0 ? i == 0 ? index1 : i == 1 ? ind1 : ind2     :     i == 0 ? index2 : i == 1 ? ind3 : ind4 ;
 
                             //copying each leaf node to it's rectangle (Node)
                             ((Node*) current->node)[j].numNode++; //rectangle have +1 leaf node (data point)
-                            ((leafNode*) ((Node*) current->node)[j].node)[((((Node*) current->node)[i].numNode) - 1)].Hit = auxNodes[ind].Hit; //adding hit data to it's rectangle (Node)
-                            ((leafNode*) ((Node*) current->node)[j].node)[((((Node*) current->node)[i].numNode) - 1)].X = auxNodes[ind].X;
-                            ((leafNode*) ((Node*) current->node)[j].node)[((((Node*) current->node)[i].numNode) - 1)].Y = auxNodes[ind].Y;
+                            ((leafNode*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].Hit = auxNodes[ind].Hit; //adding hit data to it's rectangle (Node)
+                            ((leafNode*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].X = auxNodes[ind].X;
+                            ((leafNode*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].Y = auxNodes[ind].Y;
 
                             //modifying rectangle boundaries if needed
                             if (((Node*) current->node)[j].xMax < auxNodes[ind].X) {
@@ -240,20 +209,64 @@ private:
                         }
                     }
 
-                    free(auxNodes); //free copied data
+                    //modify current (root) rectangle size. Must include both of them
+                    current->xMin = ((Node*) current->node)[0].xMin < ((Node*) current->node)[1].xMin ? ((Node*) current->node)[0].xMin : ((Node*) current->node)[1].xMin;
+                    current->yMin = ((Node*) current->node)[0].yMin < ((Node*) current->node)[1].yMin ? ((Node*) current->node)[0].yMin : ((Node*) current->node)[1].yMin;
+                    current->xMax = ((Node*) current->node)[0].xMax > ((Node*) current->node)[1].xMax ? ((Node*) current->node)[0].xMax : ((Node*) current->node)[1].xMax;
+                    current->xMax = ((Node*) current->node)[0].yMax > ((Node*) current->node)[1].yMax ? ((Node*) current->node)[0].yMax : ((Node*) current->node)[1].yMax;
+
                 }else{  //node is not root
-                    //It is not important if we insert in a full (5 nodes)
-                    //parent a new node due to when we exit this function, because it's recursive, we will be in the case
-                    //where we need to rotate nodes
-                    leafNode* auxNodes = (leafNode*) current->node;
-                    current->node = nullptr;
                     current->node = (leafNode *) malloc(sizeof(leafNode)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we doa realloc we can lose the parent*
                     current->parentNode->numNode++;         // this is important if numNodes > M we must split when we exit the function
-
+                    current->numNode = 0;
                     //we have index to the current position and the new rectangle in the last parnet->node position created
-                    int currentIndexInParent = (int) (current - ((Node*) current->parentNode->node));
+                    currentIndexInParent = (int) (current - ((Node*) current->parentNode->node));
                     //now we need to divide the M+1 leafs into those 2 nodes. m elements each one.
+
+                    for (int x = 0; x < 2; x++){
+                        //if we are root node we will only have 2 elements so we need to equal x else we may have the index in different positions
+                        int j = x == 0 ? currentIndexInParent : current->parentNode->numNode - 1;
+                        //initializing each new Node
+                        ((Node*) current->parentNode->node)[j].yMin = DBL_MIN;
+                        ((Node*) current->parentNode->node)[j].xMin = DBL_MIN;
+                        ((Node*) current->parentNode->node)[j].xMax = DBL_MAX;
+                        ((Node*) current->parentNode->node)[j].yMax = DBL_MAX;
+                        ((Node*) current->parentNode->node)[j].node = (leafNode*) malloc(sizeof(leafNode)*(M + 1));
+                        ((Node*) current->parentNode->node)[j].numNode = 0;
+                        ((Node*) current->parentNode->node)[j].leaf = true;
+                        ((Node*) current->parentNode->node)[j].parentNode = current;
+
+                        for (int i = 0; i < m; i++) {
+                            //different index depends on Node where are we working (which of 2 rectangles we are inserting data)
+                            int ind = j == currentIndexInParent ? i == 0 ? index1 : i == 1 ? ind1 : ind2     :     i == 0 ? index2 : i == 1 ? ind3 : ind4 ;
+
+                            //copying each leaf node to it's rectangle (Node)
+                            ((Node*) current->parentNode->node)[j].numNode++; //rectangle have +1 leaf node (data point)
+                            ((leafNode*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].Hit = auxNodes[ind].Hit; //adding hit data to it's rectangle (Node)
+                            ((leafNode*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].X = auxNodes[ind].X;
+                            ((leafNode*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].Y = auxNodes[ind].Y;
+
+                            //modifying rectangle boundaries if needed
+                            if (((Node*) current->parentNode->node)[j].xMax < auxNodes[ind].X) {
+                                ((Node*) current->parentNode->node)[j].xMax = auxNodes[ind].X;
+                            }
+
+                            if (((Node*) current->parentNode->node)[j].xMin > auxNodes[ind].X) {
+                                ((Node*) current->parentNode->node)[j].xMin = auxNodes[ind].X;
+                            }
+
+                            if (((Node*) current->parentNode->node)[j].yMax < auxNodes[ind].Y) {
+                                ((Node*) current->parentNode->node)[j].yMax = auxNodes[ind].Y;
+                            }
+
+                            if (((Node*) current->parentNode->node)[j].yMin > auxNodes[ind].Y) {
+                                ((Node*) current->parentNode->node)[j].yMin = auxNodes[ind].Y;
+                            }
+                        }
+                    }
+                    //parent size will change when we exit this recursive call. Every current node should modify himself
                 }
+                free(auxNodes); //free copied data
             }
         }else{          //it is not leaf node
             double newArea = DBL_MAX;
