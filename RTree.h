@@ -178,7 +178,6 @@ private:
                 //where we need to rotate nodes (split)
                 leafNode* auxNodes = (leafNode*) current->node;
                 current->node = nullptr;
-                int currentIndexInParent;
 
                 if (current->parentNode == nullptr){ // if the Node it's root
                     current->node = (Node*) malloc(sizeof(Node)*(M+1));
@@ -236,12 +235,12 @@ private:
                     current->parentNode->numNode++;         // this is important if numNodes > M we must split when we exit the function
                     current->numNode = 0;
                     //we have index to the current position and the new rectangle in the last parnet->node position created
-                    currentIndexInParent = (int) (current - ((Node*) current->parentNode->node));
+                    int currentIndexInParent = (int) (current - ((Node*) current->parentNode->node));
                     //now we need to divide the M+1 leafs into those 2 nodes. m elements each one.
 
                     for (int x = 0; x < 2; x++){
                         //if we are root node we will only have 2 elements so we need to equal x else we may have the index in different positions
-                        int j = x == 0 ? currentIndexInParent : current->parentNode->numNode - 1;
+                        int j = x == 0 ? currentIndexInParent : (current->parentNode->numNode - 1);
                         //initializing each new Node
                         ((Node*) current->parentNode->node)[j].yMin = DBL_MIN;
                         ((Node*) current->parentNode->node)[j].xMin = DBL_MIN;
@@ -404,14 +403,14 @@ private:
 
                             //copying each child Node to its new parent Node (Node)
                             ((Node*) current->node)[j].numNode++; //rectangle have +1 leaf node (data point)
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMax = auxNodes[ind].xMax;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMin = auxNodes[ind].xMin;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].leaf = auxNodes[ind].node;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].parentNode = &(((Node*) current->node)[j]);
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].xMax = auxNodes[ind].xMax;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].xMin = auxNodes[ind].xMin;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].leaf = auxNodes[ind].node;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].parentNode = &(((Node*) current->node)[j]);
 
                             //modifying rectangle boundaries if needed
                             if (((Node*) current->node)[j].xMax < auxNodes[ind].xMax) {
@@ -438,9 +437,60 @@ private:
                     current->xMax = ((Node*) current->node)[0].yMax > ((Node*) current->node)[1].yMax ? ((Node*) current->node)[0].yMax : ((Node*) current->node)[1].yMax;
 
                 }else{ //not root node
+                    current->node = (leafNode *) malloc(sizeof(leafNode)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we doa realloc we can lose the parent*
+                    current->parentNode->numNode++;         // this is important if numNodes > M we must split when we exit the function (back propagation)
+                    current->numNode = 0;
+                    //we have an index to the current position and the new rectangle in the last parnet->node position created
+                    int currentIndexInParent = (int) (current - ((Node*) current->parentNode->node));
+                    //now we need to divide the M+1 leafs into those 2 nodes. m elements each one.
 
+                    for (int x = 0; x < 2; x++){
+                        //in the first iteration we will be inserting m nodes to the current node, in the second one we will insert it in the new node.
+                        int j = x == 0 ? currentIndexInParent : (current->parentNode->numNode - 1);
+                        //initializing each new Node
+                        ((Node*) current->parentNode->node)[j].yMin = DBL_MIN;
+                        ((Node*) current->parentNode->node)[j].xMin = DBL_MIN;
+                        ((Node*) current->parentNode->node)[j].xMax = DBL_MAX;
+                        ((Node*) current->parentNode->node)[j].yMax = DBL_MAX;
+                        ((Node*) current->parentNode->node)[j].node = (Node*) malloc(sizeof(Node)*(M + 1));
+                        ((Node*) current->parentNode->node)[j].numNode = 0;
+                        ((Node*) current->parentNode->node)[j].leaf = false;
+                        ((Node*) current->parentNode->node)[j].parentNode = current;
+
+                        for (int i = 0; i < m; i++) {
+                            //different index depends on Node where are we working (which of 2 rectangles we are inserting data)
+                            int ind = j == currentIndexInParent ? i == 0 ? index1 : i == 1 ? ind1 : ind2     :     i == 0 ? index2 : i == 1 ? ind3 : ind4 ;
+
+                            //copying each leaf node to it's rectangle (Node)
+                            ((Node*) current->node)[j].numNode++; //rectangle have +1 leaf node (data point)
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMax = auxNodes[ind].xMax;
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMin = auxNodes[ind].xMin;
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].leaf = auxNodes[ind].node;
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].parentNode = &(((Node*) current->node)[j]);
+
+                            //modifying current and new rectangle boundaries
+                            if (((Node*) current->parentNode->node)[j].xMax < auxNodes[ind].xMax) {
+                                ((Node*) current->parentNode->node)[j].xMax = auxNodes[ind].xMax;
+                            }
+
+                            if (((Node*) current->parentNode->node)[j].xMin > auxNodes[ind].xMin) {
+                                ((Node*) current->parentNode->node)[j].xMin = auxNodes[ind].xMin;
+                            }
+
+                            if (((Node*) current->parentNode->node)[j].yMax < auxNodes[ind].yMax) {
+                                ((Node*) current->parentNode->node)[j].yMax = auxNodes[ind].yMax;
+                            }
+
+                            if (((Node*) current->parentNode->node)[j].yMin > auxNodes[ind].yMin) {
+                                ((Node*) current->parentNode->node)[j].yMin = auxNodes[ind].yMin;
+                            }
+                        }
+                    }
                 }
-
                 free(auxNodes);
             }
         }
