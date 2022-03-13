@@ -325,8 +325,6 @@ private:
             current->yMax = current->yMax < leaf.Y ? leaf.Y : current->yMax;
 
             if (current->numNode > M){ //we have M+1 Nodes, we need to split
-                Node* auxNodes = (Node*) current->node;
-                current->node = nullptr;
                 int currentIndexInParent;
 
                 double area = DBL_MIN;
@@ -372,7 +370,7 @@ private:
                 //find the 2 other points which they will make the second rectangle
                 int ind3 = -1, ind4 = -1;
                 for (int i = 0; i < M + 1; i++){
-                    if ((i == index1 || i == index2 || i == ind2 || i == ind1)) {
+                    if ((i != index1 && i != index2 && i != ind2 && i != ind1)) {
                         if (ind3 < 0) {
                             ind3 = i;
                         }else{
@@ -381,6 +379,8 @@ private:
                         }
                     }
                 }
+                Node* auxNodes = (Node*) current->node;
+                current->node = nullptr;
 
                 if (current->parentNode == nullptr){ // root node splitting root node in 2, creating new nodes
                     current->node = (Node*) malloc(sizeof(Node)*(M+1));
@@ -389,10 +389,10 @@ private:
 
                     for (int j = 0; j < 2; j++){
                         //initializing each new Node
-                        ((Node*) current->node)[j].yMin = DBL_MIN;
-                        ((Node*) current->node)[j].xMin = DBL_MIN;
-                        ((Node*) current->node)[j].xMax = DBL_MAX;
-                        ((Node*) current->node)[j].yMax = DBL_MAX;
+                        ((Node*) current->node)[j].yMin = (double) 999999999999999999;
+                        ((Node*) current->node)[j].xMin = (double) 999999999999999999;
+                        ((Node*) current->node)[j].xMax = (double) -999999999999999999;
+                        ((Node*) current->node)[j].yMax = (double) -999999999999999999;
                         ((Node*) current->node)[j].node = (Node *) malloc(sizeof(Node)*(M + 1));
                         ((Node*) current->node)[j].numNode = 0;
                         ((Node*) current->node)[j].leaf = false;
@@ -403,14 +403,14 @@ private:
 
                             //copying each child Node to its new parent Node (Node)
                             ((Node*) current->node)[j].numNode++; //rectangle have +1 leaf node (data point)
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].xMax = auxNodes[ind].xMax;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].xMin = auxNodes[ind].xMin;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].leaf = auxNodes[ind].node;
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].parentNode = &(((Node*) current->node)[j]);
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMax = auxNodes[ind].xMax;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMin = auxNodes[ind].xMin;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].leaf = auxNodes[ind].leaf;
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].parentNode = &((Node*)(current->node))[j];
 
                             //modifying rectangle boundaries if needed
                             if (((Node*) current->node)[j].xMax < auxNodes[ind].xMax) {
@@ -434,7 +434,7 @@ private:
                     current->xMin = ((Node*) current->node)[0].xMin < ((Node*) current->node)[1].xMin ? ((Node*) current->node)[0].xMin : ((Node*) current->node)[1].xMin;
                     current->yMin = ((Node*) current->node)[0].yMin < ((Node*) current->node)[1].yMin ? ((Node*) current->node)[0].yMin : ((Node*) current->node)[1].yMin;
                     current->xMax = ((Node*) current->node)[0].xMax > ((Node*) current->node)[1].xMax ? ((Node*) current->node)[0].xMax : ((Node*) current->node)[1].xMax;
-                    current->xMax = ((Node*) current->node)[0].yMax > ((Node*) current->node)[1].yMax ? ((Node*) current->node)[0].yMax : ((Node*) current->node)[1].yMax;
+                    current->yMax = ((Node*) current->node)[0].yMax > ((Node*) current->node)[1].yMax ? ((Node*) current->node)[0].yMax : ((Node*) current->node)[1].yMax;
 
                 }else{ //not root node
                     current->node = (leafNode *) malloc(sizeof(leafNode)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we doa realloc we can lose the parent*
