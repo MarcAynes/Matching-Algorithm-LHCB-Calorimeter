@@ -163,7 +163,7 @@ private:
                 //find the 2 other points which they will make the second rectangle
                 int ind3 = -1, ind4 = -1;
                 for (int i = 0; i < M + 1; i++){
-                    if ((i == index1 || i == index2 || i == ind2 || i == ind1)) {
+                    if ((i != index1 && i != index2 && i != ind2 && i != ind1)) {
                         if (ind3 < 0) {
                             ind3 = i;
                         }else{
@@ -187,10 +187,10 @@ private:
                     //for each new rectangle insert m (3) leaf nodes
                     for (int j = 0; j < 2; j++){
                         //initializing each new Node
-                        ((Node*) current->node)[j].yMin = DBL_MIN;
-                        ((Node*) current->node)[j].xMin = DBL_MIN;
-                        ((Node*) current->node)[j].xMax = DBL_MAX;
-                        ((Node*) current->node)[j].yMax = DBL_MAX;
+                        ((Node*) current->node)[j].yMin = (double) 999999999999999999;
+                        ((Node*) current->node)[j].xMin = (double) 999999999999999999;  //DBL_MAX and DBL_MIN sometimes not working properly
+                        ((Node*) current->node)[j].xMax = (double) -999999999999999999;
+                        ((Node*) current->node)[j].yMax = (double) -999999999999999999;
                         ((Node*) current->node)[j].node = (leafNode*) malloc(sizeof(leafNode)*(M + 1));
                         ((Node*) current->node)[j].numNode = 0;
                         ((Node*) current->node)[j].leaf = true;
@@ -228,10 +228,10 @@ private:
                     current->xMin = ((Node*) current->node)[0].xMin < ((Node*) current->node)[1].xMin ? ((Node*) current->node)[0].xMin : ((Node*) current->node)[1].xMin;
                     current->yMin = ((Node*) current->node)[0].yMin < ((Node*) current->node)[1].yMin ? ((Node*) current->node)[0].yMin : ((Node*) current->node)[1].yMin;
                     current->xMax = ((Node*) current->node)[0].xMax > ((Node*) current->node)[1].xMax ? ((Node*) current->node)[0].xMax : ((Node*) current->node)[1].xMax;
-                    current->xMax = ((Node*) current->node)[0].yMax > ((Node*) current->node)[1].yMax ? ((Node*) current->node)[0].yMax : ((Node*) current->node)[1].yMax;
+                    current->yMax = ((Node*) current->node)[0].yMax > ((Node*) current->node)[1].yMax ? ((Node*) current->node)[0].yMax : ((Node*) current->node)[1].yMax;
 
                 }else{  //node is not root
-                    current->node = (leafNode *) malloc(sizeof(leafNode)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we doa realloc we can lose the parent*
+                    //current->node = (leafNode *) malloc(sizeof(leafNode)*(M+1)); //split, inserting 2 Nodes alloc all M+1 nodes because if we do a realloc we can lose the parent*
                     current->parentNode->numNode++;         // this is important if numNodes > M we must split when we exit the function
                     current->numNode = 0;
                     //we have index to the current position and the new rectangle in the last parnet->node position created
@@ -239,17 +239,17 @@ private:
                     //now we need to divide the M+1 leafs into those 2 nodes. m elements each one.
 
                     for (int x = 0; x < 2; x++){
-                        //if we are root node we will only have 2 elements so we need to equal x else we may have the index in different positions
+                        //if we are root node we will only have 2 elements, so we need to equal x else we may have the index in different positions
                         int j = x == 0 ? currentIndexInParent : (current->parentNode->numNode - 1);
                         //initializing each new Node
-                        ((Node*) current->parentNode->node)[j].yMin = DBL_MIN;
-                        ((Node*) current->parentNode->node)[j].xMin = DBL_MIN;
-                        ((Node*) current->parentNode->node)[j].xMax = DBL_MAX;
-                        ((Node*) current->parentNode->node)[j].yMax = DBL_MAX;
+                        ((Node*) current->parentNode->node)[j].yMin = (double) 999999999999999999;
+                        ((Node*) current->parentNode->node)[j].xMin = (double) 999999999999999999;
+                        ((Node*) current->parentNode->node)[j].xMax = (double) -999999999999999999;
+                        ((Node*) current->parentNode->node)[j].yMax = (double) -999999999999999999;
                         ((Node*) current->parentNode->node)[j].node = (leafNode*) malloc(sizeof(leafNode)*(M + 1));
                         ((Node*) current->parentNode->node)[j].numNode = 0;
                         ((Node*) current->parentNode->node)[j].leaf = true;
-                        ((Node*) current->parentNode->node)[j].parentNode = current;
+                        ((Node*) current->parentNode->node)[j].parentNode = current->parentNode;
 
                         for (int i = 0; i < m; i++) {
                             //different index depends on Node where are we working (which of 2 rectangles we are inserting data)
@@ -461,7 +461,7 @@ private:
                             //different index depends on Node where are we working (which of 2 rectangles we are inserting data)
                             int ind = j == currentIndexInParent ? i == 0 ? index1 : i == 1 ? ind1 : ind2     :     i == 0 ? index2 : i == 1 ? ind3 : ind4 ;
 
-                            //copying each leaf node to it's rectangle (Node)
+                            //copying each leaf node to its rectangle (Node)
                             ((Node*) current->node)[j].numNode++; //rectangle have +1 leaf node (data point)
                             ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
                             ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
