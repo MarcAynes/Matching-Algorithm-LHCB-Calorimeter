@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include "hit.h"
+#include "trace.h"
 
 using namespace std;
 /*
@@ -11,11 +12,13 @@ using namespace std;
  * Storing hits data on vectors.
  */
 
-vector<vector<hit>> readFile(string fileName){
+vector<vector<hit>> readFile(string fileName, vector<vector<trace>>* traces){
     string line, word;
     fstream file (fileName, ios::in);
     vector<vector<hit>> data;
-    int i = 0;
+    int i = 0, k = 0;
+    data.emplace_back();
+    traces->emplace_back();
 
     if(file.is_open()){
         while(getline(file, line)){
@@ -24,15 +27,15 @@ vector<vector<hit>> readFile(string fileName){
             int element = 0;
             int j = 0;
             hit hitData;
-
-            data.emplace_back();
+            trace traceData;
 
             while(getline(str, word, ',')) {        //read line from csv
                 if(element == 5){
-                    element++;
+                    element = 0;
                     hitData.MeVs = stod(word);
                     data[i].push_back(hitData);
-                    continue;
+                    j = 1;
+                    break;
                 }
 
                 if(element == 4){
@@ -61,12 +64,71 @@ vector<vector<hit>> readFile(string fileName){
 
                 if (word[0] == 'C' && element == 0) {
                     element++;
-
                 } else if(element == 0) {
-                    i++;
                     break;
                 }
             }
+
+            if (j == 1){
+                continue;
+            }
+
+             do {        //read line from csv
+                if (element == 6){
+                    element++;
+                    traceData.ty = stod(word);
+                    (*traces)[i].push_back(traceData);
+                    j = 1;
+                    continue;
+                }
+
+                if (element == 5) {
+                    element++;
+                    traceData.tx = stod(word);
+                    continue;
+                }
+
+                if (element == 4) {
+                    element++;
+                    traceData.Z = stod(word);
+                    continue;
+                }
+
+                if (element == 3) {
+                    element++;
+                    traceData.Y = stod(word);
+                    continue;
+                }
+
+                if (element == 2) {
+                    element++;
+                    traceData.X = stod(word);
+                    continue;
+                }
+
+                if (element == 1) {
+                    element++;
+                    traceData.id = stoi(word);
+                    continue;
+                }
+
+                if (word[0] == 'T' && element == 0) {
+                    element++;
+                    k = 0;
+                } else if (element == 0 && k == 0) {
+                    i++;
+                    k++;
+                    data.emplace_back();
+                    traces->emplace_back();
+                    break;
+                }else if(k > 0){
+                    break;
+                }
+            } while(getline(str, word, ','));
+
+             if (j == 1){
+                 continue;
+             }
         }
     }
 
