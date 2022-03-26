@@ -9,5 +9,7 @@ int main() {
 
     rTree.insert(readFile("./../dataTrackMatch.csv", &traces));
 
+    vector<vector<hit>> possibleHits = rTree.searchWithTrace(traces);
+
     return 0;
 }

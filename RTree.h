@@ -496,10 +496,17 @@ private:
         }
     }
 
+    /*
+     * Recursive function where we will search for a given trace.
+     */
+    vector<hit> searchTrace(trace traceIn){
+        
+    }
+
 public:
     /*
      * Insert Function
-     * add all data to the data structure,
+     * add ALL data to the data structure,
      * Using recursive function be aware of the stack used and the stack available
      */
     void insert(vector<vector<hit>> data){
@@ -510,6 +517,18 @@ public:
                 newLeaf.Y = data[i][j].Y;
                 newLeaf.Hit = data[i][j];
                 insert(newLeaf, &root);
+            }
+        }
+    }
+
+    /*
+     * Search ALL possible hits inside a trace path + some threshold
+     * Using recursive function we iterate over all the RTree be aware of the stack used and the stack available
+     */
+    vector<vector<hit>> searchWithTrace(vector<vector<trace>> traces){
+        for (int i = 0; i < traces.size(); i++) {
+            for (int j = 0; j < traces.size(); j++){
+                searchTrace(traces[i][j]);
             }
         }
     }
