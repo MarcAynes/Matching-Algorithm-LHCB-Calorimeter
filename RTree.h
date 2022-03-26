@@ -61,9 +61,17 @@ private:
     }
 
     /*
+     * Function that given a trace (mathematical vector) + threshold will create a rectangle
+     * Given this rectangle will calculate if the Node is partially or totally inside
+     */
+    bool isInside(trace t, Node* node){
+
+    }
+
+
+    /*
      * Recursive function where we will insert the leaf Node
      */
-
     void insert(leafNode leaf, Node* current){
         if (current->leaf){                 //root is leaf
             if (current->numNode < M){      //if there is space
@@ -499,8 +507,16 @@ private:
     /*
      * Recursive function where we will search for a given trace.
      */
-    vector<hit> searchTrace(trace traceIn){
-        
+    vector<hit> searchTrace(trace traceIn, Node *current){
+        if (current->leaf){
+
+        }else{
+            for (int i = 0; i < current->numNode; i++){
+                if (isInside(traceIn, &((Node*)(current->node))[i])){
+                    return searchTrace(traceIn, &((Node*)(current->node))[i]);
+                }
+            }
+        }
     }
 
 public:
@@ -525,12 +541,18 @@ public:
      * Search ALL possible hits inside a trace path + some threshold
      * Using recursive function we iterate over all the RTree be aware of the stack used and the stack available
      */
-    vector<vector<hit>> searchWithTrace(vector<vector<trace>> traces){
+    vector<vector<vector<hit>>> searchWithTrace(vector<vector<trace>> traces){
+        vector<vector<vector<hit>>> possibleHits;
+        possibleHits.emplace_back();
         for (int i = 0; i < traces.size(); i++) {
+            possibleHits[i].emplace_back();
             for (int j = 0; j < traces.size(); j++){
-                searchTrace(traces[i][j]);
+                possibleHits[i][j].emplace_back();
+                vector<hit> hits = searchTrace(traces[i][j], &root);
+                possibleHits[i][j] = hits;
             }
         }
+        return possibleHits;
     }
 
     RTree(){
