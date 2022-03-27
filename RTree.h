@@ -64,10 +64,17 @@ private:
      * Function that given a trace (mathematical vector) + threshold will create a rectangle
      * Given this rectangle will calculate if the Node is partially or totally inside
      */
-    bool isInside(trace t, Node* node){
+    bool isInside(trace t, Node node){
 
     }
 
+    /*
+     * Function that given a trace (mathematical vector) + threshold will create a rectangle
+     * Given this rectangle will calculate if the leaf Node (Hit) is inside
+     */
+    bool hitIsInside(trace t, leafNode leaf){
+
+    }
 
     /*
      * Recursive function where we will insert the leaf Node
@@ -509,10 +516,14 @@ private:
      */
     vector<hit> searchTrace(trace traceIn, Node *current){
         if (current->leaf){
+            for (int i = 0; i < current->numNode; i++){
+                if(hitIsInside(traceIn, ((leafNode*)(current->node))[i])){
 
+                }
+            }
         }else{
             for (int i = 0; i < current->numNode; i++){
-                if (isInside(traceIn, &((Node*)(current->node))[i])){
+                if (isInside(traceIn, ((Node*)(current->node))[i])){
                     return searchTrace(traceIn, &((Node*)(current->node))[i]);
                 }
             }
