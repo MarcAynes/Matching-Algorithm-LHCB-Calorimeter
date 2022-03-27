@@ -45,7 +45,7 @@ private:
     /*       ntop
      *    A ___ B   mPerpendicular
      *    /   /
- nMinus  /   /    nPlus
+ nLeft   /   /    nRight
    mm   /   /    mm
      * /___/    mPerpendicular
      * C   D
@@ -70,6 +70,14 @@ private:
         double nDown;
         double nRight;
         double nLeft;
+        double minXLeft;
+        double minXRight;
+        double maxXLeft;
+        double maxXRight;
+        double minYLeft;
+        double minYRight;
+        double maxYLeft;
+        double maxYRight;
         bool validM;    //if the first line is vertical m would be infinity
     }traceRectangle;
 
@@ -156,6 +164,38 @@ private:
             traceRectangle1.C = finalC;
             traceRectangle1.D = finalD;
             traceRectangle1.validM = true;
+
+            if(traceRectangle1.A.Px < traceRectangle1.C.Px){
+                traceRectangle1.minXLeft = traceRectangle1.A.Px;
+                traceRectangle1.maxXLeft = traceRectangle1.C.Px;
+            }else{
+                traceRectangle1.minXLeft = traceRectangle1.C.Px;
+                traceRectangle1.maxXLeft = traceRectangle1.A.Px;
+            }
+
+            if(traceRectangle1.B.Px < traceRectangle1.D.Px){
+                traceRectangle1.minXRight = traceRectangle1.B.Px;
+                traceRectangle1.maxXRight = traceRectangle1.D.Px;
+            }else{
+                traceRectangle1.minXRight = traceRectangle1.D.Px;
+                traceRectangle1.maxXRight = traceRectangle1.B.Px;
+            }
+
+            if(traceRectangle1.B.Py < traceRectangle1.D.Py){
+                traceRectangle1.minYRight = traceRectangle1.B.Py;
+                traceRectangle1.maxYRight = traceRectangle1.D.Py;
+            }else{
+                traceRectangle1.minYRight = traceRectangle1.D.Py;
+                traceRectangle1.maxYRight = traceRectangle1.B.Py;
+            }
+
+            if(traceRectangle1.A.Py < traceRectangle1.C.Py){
+                traceRectangle1.minYLeft = traceRectangle1.A.Py;
+                traceRectangle1.maxYLeft = traceRectangle1.C.Py;
+            }else{
+                traceRectangle1.minYLeft = traceRectangle1.C.Py;
+                traceRectangle1.maxYLeft = traceRectangle1.A.Py;
+            }
         }else{
             /*
              * if it's not tilted we calculate it in a different way
@@ -214,6 +254,22 @@ private:
                 traceRectangle1.nLeft = traceRectangle1.A.Px;
                 traceRectangle1.nRight = traceRectangle1.B.Px;
             }
+
+            if(traceRectangle1.B.Py < traceRectangle1.D.Py){
+                traceRectangle1.minYRight = traceRectangle1.B.Py;
+                traceRectangle1.maxYRight = traceRectangle1.D.Py;
+            }else{
+                traceRectangle1.minYRight = traceRectangle1.D.Py;
+                traceRectangle1.maxYRight = traceRectangle1.B.Py;
+            }
+
+            if(traceRectangle1.A.Py < traceRectangle1.C.Py){
+                traceRectangle1.minYLeft = traceRectangle1.A.Py;
+                traceRectangle1.maxYLeft = traceRectangle1.C.Py;
+            }else{
+                traceRectangle1.minYLeft = traceRectangle1.C.Py;
+                traceRectangle1.maxYLeft = traceRectangle1.A.Py;
+            }
         }
     }
 
@@ -230,7 +286,49 @@ private:
      * Given this rectangle will calculate if the Node is partially or totally inside
      */
     bool isInside(trace t, Node node){
+        /* the rectangle (Node) have this shape
+         *  ___
+         * |   |
+         * |___|
+         *
+         * 2 of the lines de m values on y = mx + n is 0
+         * the other 2 m are infinity
+         */
+        double y;
+        if (traceRectangle1.validM){    // the trace does not have a vertical path
+            //y = mx + n -> using x as de vertical left side of the rectangle (Node)
+            y = (traceRectangle1.mm * node.xMin) + traceRectangle1.nLeft;
 
+            if (y <= node.yMax && node.yMin >= y && y <= traceRectangle1.maxYLeft && y >= traceRectangle1.minYLeft) {     //if Y is "touching" both rectangles
+                return true;
+            }
+
+            //y = mx + n -> using x as de vertical right side of the rectangle (Node)
+            y = (traceRectangle1.mm * node.xMax) + traceRectangle1.nLeft;
+
+            if (y <= node.yMax && node.yMin >= y && y <= traceRectangle1.maxYLeft && y >= traceRectangle1.minYLeft) {     //if Y is "touching" both rectangles
+                return true;
+            }
+
+
+            //y = mx + n -> using x as de vertical left side of the rectangle (Node)
+            y = (traceRectangle1.mm * node.xMin) + traceRectangle1.nRight;
+
+            if (y <= node.yMax && node.yMin >= y && y <= traceRectangle1.maxYRight && y >= traceRectangle1.minYRight) {     //if Y is "touching" both rectangles
+                return true;
+            }
+
+            //y = mx + n -> using x as de vertical right side of the rectangle (Node)
+            y = (traceRectangle1.mm * node.xMax) + traceRectangle1.nRight;
+
+            if (y <= node.yMax && node.yMin >= y && y <= traceRectangle1.maxYRight && y >= traceRectangle1.minYRight) {     //if Y is "touching" both rectangles
+                return true;
+            }
+
+            //TODO: need to check if there is an intersection between trace rectangle left or right and Node rectangle up or down sides
+        }else{
+
+        }
     }
 
     double euclideanDistance(double x1, double y1, double x2, double y2){
