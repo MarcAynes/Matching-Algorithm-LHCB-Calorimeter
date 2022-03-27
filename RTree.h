@@ -514,17 +514,17 @@ private:
     /*
      * Recursive function where we will search for a given trace.
      */
-    vector<hit> searchTrace(trace traceIn, Node *current){
+    void searchTrace(trace traceIn, Node *current, vector<hit> *data){
         if (current->leaf){
             for (int i = 0; i < current->numNode; i++){
                 if(hitIsInside(traceIn, ((leafNode*)(current->node))[i])){
-
+                    data->push_back(((leafNode*)(current->node))[i].Hit);
                 }
             }
         }else{
             for (int i = 0; i < current->numNode; i++){
                 if (isInside(traceIn, ((Node*)(current->node))[i])){
-                    return searchTrace(traceIn, &((Node*)(current->node))[i]);
+                    searchTrace(traceIn, &((Node*)(current->node))[i], data);
                 }
             }
         }
@@ -559,8 +559,10 @@ public:
             possibleHits[i].emplace_back();
             for (int j = 0; j < traces.size(); j++){
                 possibleHits[i][j].emplace_back();
-                vector<hit> hits = searchTrace(traces[i][j], &root);
-                possibleHits[i][j] = hits;
+                vector<hit> data;
+                data.emplace_back();
+                searchTrace(traces[i][j], &root, &data);
+                possibleHits[i][j] = data;
             }
         }
         return possibleHits;
