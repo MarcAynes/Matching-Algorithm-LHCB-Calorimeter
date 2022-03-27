@@ -11,34 +11,229 @@ using namespace std;
 #define m 3
 #define M 5
 
-/*
- * R-Tree Data structure
- * spatial indexing of data
- */
-
-typedef struct Node{
-    void* node;
-    Node* parentNode;
-    double xMax;
-    double yMax;
-    double xMin;
-    double yMin;
-    short numNode;          //it could be a char for more memory optimization but the way C structures work it won't change the memory allocated
-    bool leaf;              //bool leaf it's used to know if the next node (going down) it's a leaf node or a regular node
-}Node;
-
-typedef struct leafNode{
-    hit Hit;
-    double X;
-    double Y;
-}leafNode;
-
 class RTree {
 private:
+    /*
+     * R-Tree Data structure
+     * spatial indexing of data
+     */
+
+    typedef struct Node{
+        void* node;
+        Node* parentNode;
+        double xMax;
+        double yMax;
+        double xMin;
+        double yMin;
+        short numNode;          //it could be a char for more memory optimization but the way C structures work it won't change the memory allocated
+        bool leaf;              //bool leaf it's used to know if the next node (going down) it's a leaf node or a regular node
+    }Node;
+
+    typedef struct leafNode{
+        hit Hit;
+        double X;
+        double Y;
+    }leafNode;
+
     Node root{};
 
-    double euclideanDistance(double x1, double y1, double x2, double y2)
-    {
+    typedef struct Point{ //trace rectangle corners
+        double Px;
+        double Py;
+    }Point;
+
+    /*       ntop
+     *    A ___ B   mPerpendicular
+     *    /   /
+ nMinus  /   /    nPlus
+   mm   /   /    mm
+     * /___/    mPerpendicular
+     * C   D
+     *  ndown
+     *
+     *   Or
+     *A ___ B
+     * |   |
+     * |   |
+     * |   |
+     * |___|
+     *C     D
+     */
+    typedef struct traceRectangle{
+        Point A;
+        Point B;
+        Point C;
+        Point D;
+        double mm;
+        double mPerpendicular;
+        double nTop;
+        double nDown;
+        double nRight;
+        double nLeft;
+        bool validM;    //if the first line is vertical m would be infinity
+    }traceRectangle;
+
+    traceRectangle traceRectangle1;
+
+    /*
+     * Function that prepares the state for the search
+     * this function creates the trace rectangle corners
+     */
+    void prepareSearch(trace t){
+        traceRectangle1.validM = false;
+
+        //calculate the corners of the trace rectangle projection over rtree plane
+        Point A; //initial point of the trace
+        A.Px = t.X;
+        A.Py = t.Y;
+
+        Point B; //latest point of the trace
+        B.Px = t.tx*(MaxTraceHigh - t.Z) + t.X;
+        B.Py = t.ty*(MaxTraceHigh - t.Z) + t.Y;
+        //Point B - Point A = trace line vector, also these 2 points are the beginning and end of the rectangle
+
+        //Calculating 4 rectangle corners if it's tilted
+        /*
+         *    A ___ B
+         *    /   /
+         *   /   /
+         *  /   /
+         * /___/
+         * C   D
+         */
+        //if the trace went through the detector perpendicular or almost perpendicular or there is no difference in X
+        if ((B.Px - A.Px) < Threshold){
+            //Y = mX + n
+            //m = (Y-Yo)/(X-Xo) => t.ty/t.tx
+            //M and m names are in use by the min and max number of elements in a Rtree Node, we will use the name mm
+            double mm = t.ty/t.tx;
+
+            //n = Y - mX
+            double n = A.Py - (mm * A.Px);
+
+            //n + threshold = Y - m(X+threshold)
+            //n - threshold = Y - m(X-threshold)
+            double nLeft = A.Py - (mm * (A.Px + Threshold));    //left
+            double nRight = A.Py - (mm * (A.Px - Threshold));   //right
+
+            //Perpendicular lines m = -1/m
+            double mPerpendicular = (-1)/mm;
+
+            //perpendicular lines must cross through points previously calculated A and B
+            double nTop = A.Py - (mPerpendicular * B.Px);
+            double nDown = B.Py - (mPerpendicular * A.Px);
+
+            //Calculating intersections between 4 lines X = (n2-n1)/(m1-m2)
+            //Corner A of previous schema
+            Point finalA;
+            finalA.Px = (nTop-nLeft)/(mm - mPerpendicular);
+            finalA.Py = mPerpendicular*finalA.Px + nTop;
+
+            //Corner B of previous schema
+            Point finalB;
+            finalB.Px = (nTop-nRight)/(mm - mPerpendicular);
+            finalB.Py = mPerpendicular*finalB.Px + nTop;
+
+            //Corner C of previous schema
+            Point finalC;
+            finalC.Px = (nDown-nLeft)/(mm - mPerpendicular);
+            finalC.Py = mPerpendicular*finalC.Px + nDown;
+
+            //Corner D of previous schema
+            Point finalD;
+            finalD.Px = (nDown-nRight)/(mm - mPerpendicular);
+            finalD.Py = mPerpendicular*finalD.Px + nDown;
+
+            //copy values
+            traceRectangle1.mm = mm;
+            traceRectangle1.mPerpendicular = mPerpendicular;
+            traceRectangle1.nDown = nDown;
+            traceRectangle1.nTop = nTop;
+            traceRectangle1.nRight = nRight;
+            traceRectangle1.nLeft = nLeft;
+            traceRectangle1.A = finalA;
+            traceRectangle1.B = finalB;
+            traceRectangle1.C = finalC;
+            traceRectangle1.D = finalD;
+            traceRectangle1.validM = true;
+        }else{
+            /*
+             * if it's not tilted we calculate it in a different way
+             *A ___ B
+             * |   |
+             * |   |
+             * |   |
+             * |___|
+             *C     D
+             */
+
+            traceRectangle1.validM = false;  //vertical line has m = infinity on y = mx + n or almost
+
+            if ((B.Py - A.Py) < Threshold){             //the trace went through the detector almost perpendicular
+                //Corner A of previous schema
+                traceRectangle1.A.Px = B.Px - Threshold;
+                traceRectangle1.A.Py = B.Py + Threshold;
+
+                //Corner B of previous schema
+                traceRectangle1.B.Px = B.Px + Threshold;
+                traceRectangle1.B.Py = B.Py + Threshold;
+
+                //Corner C of previous schema
+                traceRectangle1.C.Px = A.Px - Threshold;
+                traceRectangle1.C.Py = A.Py - Threshold;
+
+                //Corner D of previous schema
+                traceRectangle1.D.Px = A.Px + Threshold;
+                traceRectangle1.D.Py = A.Py - Threshold;
+
+                traceRectangle1.mPerpendicular = 0;
+                traceRectangle1.nTop = traceRectangle1.A.Py;
+                traceRectangle1.nDown = traceRectangle1.C.Py;
+                traceRectangle1.nLeft = traceRectangle1.A.Px;
+                traceRectangle1.nRight = traceRectangle1.B.Px;
+            }else{                                      //the trace projection is vertical
+                //Corner A of previous schema
+                traceRectangle1.A.Px = B.Px - Threshold;
+                traceRectangle1.A.Py = B.Py;
+
+                //Corner B of previous schema
+                traceRectangle1.B.Px = B.Px + Threshold;
+                traceRectangle1.B.Py = B.Py;
+
+                //Corner C of previous schema
+                traceRectangle1.C.Px = A.Px - Threshold;
+                traceRectangle1.C.Py = A.Py;
+
+                //Corner D of previous schema
+                traceRectangle1.D.Px = A.Px + Threshold;
+                traceRectangle1.D.Py = A.Py;
+
+                traceRectangle1.mPerpendicular = 0;
+                traceRectangle1.nTop = B.Py;
+                traceRectangle1.nDown = A.Py;
+                traceRectangle1.nLeft = traceRectangle1.A.Px;
+                traceRectangle1.nRight = traceRectangle1.B.Px;
+            }
+        }
+    }
+
+    /*
+     * Function that given a trace (mathematical vector) + threshold will create a rectangle
+     * Given this rectangle will calculate if the leaf Node (Hit) is inside
+     */
+    bool hitIsInside(trace t, leafNode leaf){
+
+    }
+
+    /*
+     * Function that given a trace (mathematical vector) + threshold will create a rectangle
+     * Given this rectangle will calculate if the Node is partially or totally inside
+     */
+    bool isInside(trace t, Node node){
+
+    }
+
+    double euclideanDistance(double x1, double y1, double x2, double y2){
         // Calculating distance
         return sqrt(pow(x2 - x1, 2) +
                     pow(y2 - y1, 2));
@@ -58,22 +253,6 @@ private:
         double areaB = (littleRectangleB.xMax - littleRectangleB.xMin) * (littleRectangleB.yMax - littleRectangleB.yMin);
 
         return totalArea - areaA - areaB;
-    }
-
-    /*
-     * Function that given a trace (mathematical vector) + threshold will create a rectangle
-     * Given this rectangle will calculate if the Node is partially or totally inside
-     */
-    bool isInside(trace t, Node node){
-
-    }
-
-    /*
-     * Function that given a trace (mathematical vector) + threshold will create a rectangle
-     * Given this rectangle will calculate if the leaf Node (Hit) is inside
-     */
-    bool hitIsInside(trace t, leafNode leaf){
-
     }
 
     /*
@@ -561,6 +740,7 @@ public:
                 possibleHits[i][j].emplace_back();
                 vector<hit> data;
                 data.emplace_back();
+                prepareSearch(traces[i][j]);
                 searchTrace(traces[i][j], &root, &data);
                 possibleHits[i][j] = data;
             }
