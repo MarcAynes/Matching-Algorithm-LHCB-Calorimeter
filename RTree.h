@@ -621,7 +621,7 @@ private:
 
                 double area = DBL_MIN;
                 int index1 = 0, index2 = 0;
-                for (int i = 0; i < current->numNode; i++) {     //O(N^2) cost at finding 2 furthest rectangles, but for 6 rectangles it's not critical
+                for (int i = 0; i < current->numNode; i++) {     //O(N^2) cost at finding 2 furthest rectangles, but for M + 1 = 6 rectangles it's not critical
                     for (int j = i + 1; j < current->numNode; j++) {
                         double auxArea = extraArea(((Node*) current->node)[i], ((Node*) current->node)[j]);
                         if (auxArea > area) {
