@@ -325,7 +325,47 @@ private:
                 return true;
             }
 
-            //TODO: need to check if there is an intersection between trace rectangle left or right and Node rectangle up or down sides
+            //check if there is an intersection between trace rectangle left or right and Node rectangle up or down sides
+            double x;
+            if(node.yMin >= traceRectangle1.minYRight && node.yMin <= traceRectangle1.maxYRight) {
+                //node rectangle down line
+                //(y-n)/m = x
+                x = ((((double) node.yMin) - ((double) traceRectangle1.nRight)) / (double) traceRectangle1.mm);
+
+                if (x <= node.xMax && node.xMin <= x){  //trace rectangle, right line
+                    return true;
+                }
+
+                x = ((((double) node.yMin) - ((double) traceRectangle1.nLeft)) / (double) traceRectangle1.mm);
+
+                if (x <= node.xMax && node.xMin <= x){ //trace rectangle, left line
+                    return true;
+                }
+            }
+
+            if(node.yMax >= traceRectangle1.minYRight && node.yMax <= traceRectangle1.maxYRight) {
+                //node rectangle top line
+                //(y-n)/m = x
+                x = ((((double) node.yMax) - ((double) traceRectangle1.nRight)) / (double) traceRectangle1.mm);
+
+                if (x <= node.xMax && node.xMin <= x){  //trace rectangle, right line
+                    return true;
+                }
+
+                x = ((((double) node.yMax) - ((double) traceRectangle1.nLeft)) / (double) traceRectangle1.mm);
+
+                if (x <= node.xMax && node.xMin <= x){ //trace rectangle, left line
+                    return true;
+                }
+            }
+
+            //if trace is inside a node rectangle, we will compare if one of the rectangle vertex is inside node
+            if (traceRectangle1.A.Py <= node.yMax && traceRectangle1.A.Py >= node.yMin && traceRectangle1.A.Px <= node.xMax && traceRectangle1.A.Px >= node.xMin){
+                return true;
+            }
+
+            //if node rectangle is inside trace rectangle
+            
         }else{
 
         }
