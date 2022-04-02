@@ -364,8 +364,21 @@ private:
                 return true;
             }
 
-            //if node rectangle is inside trace rectangle
-            
+            //if node rectangle is inside trace rectangle, making a line through one corner of node rectangle with m = trace m
+            // if trace nleft < n corner < trace nright => between corner is between 2 sides of trace rectangle, then is needed to know if the Y of the corner is between ymax and ymin of the trace
+            //y-mx = n
+            double n = node.yMin - (traceRectangle1.mm * node.xMin);
+
+            // y = ((n1*m2)-(n2*m1))/(m2-m1) <- used to know the Y of the trace path which must be between
+            // 1 elements = Node    2 elements = trace
+            double y1 = ((n * traceRectangle1.mPerpendicular)-(traceRectangle1.nDown * traceRectangle1.mm))/(traceRectangle1.mPerpendicular - traceRectangle1.mm);
+            double y2 = ((n * traceRectangle1.mPerpendicular)-(traceRectangle1.nTop * traceRectangle1.mm))/(traceRectangle1.mPerpendicular - traceRectangle1.mm);
+
+            if ((traceRectangle1.nLeft < traceRectangle1.nRight && n <= traceRectangle1.nRight && n >= traceRectangle1.nLeft || traceRectangle1.nLeft > traceRectangle1.nRight && n >= traceRectangle1.nRight && n <= traceRectangle1.nLeft) && node.yMin >= y1 && node.yMin <= y2){
+                return true;
+            }
+
+            return false;
         }else{
 
         }
