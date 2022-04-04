@@ -110,7 +110,7 @@ private:
          * C   D
          */
         //if the trace went through the detector perpendicular or almost perpendicular or there is no difference in X
-        if ((B.Px - A.Px) < Threshold){
+        if ((B.Px > A.Px && (B.Px - A.Px) > Threshold) || (B.Px < A.Px && (A.Px - B.Px) > Threshold)){
             //Y = mX + n
             //m = (Y-Yo)/(X-Xo) => t.ty/t.tx
             //M and m names are in use by the min and max number of elements in a Rtree Node, we will use the name mm
@@ -209,50 +209,98 @@ private:
 
             traceRectangle1.validM = false;  //vertical line has m = infinity on y = mx + n or almost
 
-            if ((B.Py - A.Py) < Threshold){             //the trace went through the detector almost perpendicular
-                //Corner A of previous schema
-                traceRectangle1.A.Px = B.Px - Threshold;
-                traceRectangle1.A.Py = B.Py + Threshold;
+            if ((B.Py > A.Py && (B.Py - A.Py) < Threshold) || (B.Py < A.Py && (A.Py - B.Py) < Threshold)){             //the trace went through the detector almost perpendicular
+                if(B.Py > A.Py){
+                    //Corner A of previous schema
+                    traceRectangle1.A.Px = B.Px - Threshold;
+                    traceRectangle1.A.Py = B.Py + Threshold;
 
-                //Corner B of previous schema
-                traceRectangle1.B.Px = B.Px + Threshold;
-                traceRectangle1.B.Py = B.Py + Threshold;
+                    //Corner B of previous schema
+                    traceRectangle1.B.Px = B.Px + Threshold;
+                    traceRectangle1.B.Py = B.Py + Threshold;
 
-                //Corner C of previous schema
-                traceRectangle1.C.Px = A.Px - Threshold;
-                traceRectangle1.C.Py = A.Py - Threshold;
+                    //Corner C of previous schema
+                    traceRectangle1.C.Px = A.Px - Threshold;
+                    traceRectangle1.C.Py = A.Py - Threshold;
 
-                //Corner D of previous schema
-                traceRectangle1.D.Px = A.Px + Threshold;
-                traceRectangle1.D.Py = A.Py - Threshold;
+                    //Corner D of previous schema
+                    traceRectangle1.D.Px = A.Px + Threshold;
+                    traceRectangle1.D.Py = A.Py - Threshold;
 
-                traceRectangle1.mPerpendicular = 0;
-                traceRectangle1.nTop = traceRectangle1.A.Py;
-                traceRectangle1.nDown = traceRectangle1.C.Py;
-                traceRectangle1.nLeft = traceRectangle1.A.Px;
-                traceRectangle1.nRight = traceRectangle1.B.Px;
+                    traceRectangle1.mPerpendicular = 0;
+                    traceRectangle1.nTop = traceRectangle1.A.Py;
+                    traceRectangle1.nDown = traceRectangle1.C.Py;
+                    traceRectangle1.nLeft = traceRectangle1.A.Px;
+                    traceRectangle1.nRight = traceRectangle1.B.Px;
+                }else{
+                    //Corner A of previous schema
+                    traceRectangle1.A.Px = A.Px - Threshold;
+                    traceRectangle1.A.Py = A.Py + Threshold;
+
+                    //Corner B of previous schema
+                    traceRectangle1.B.Px = A.Px + Threshold;
+                    traceRectangle1.B.Py = A.Py + Threshold;
+
+                    //Corner C of previous schema
+                    traceRectangle1.C.Px = B.Px - Threshold;
+                    traceRectangle1.C.Py = B.Py - Threshold;
+
+                    //Corner D of previous schema
+                    traceRectangle1.D.Px = B.Px + Threshold;
+                    traceRectangle1.D.Py = B.Py - Threshold;
+
+                    traceRectangle1.mPerpendicular = 0;
+                    traceRectangle1.nTop = traceRectangle1.A.Py;
+                    traceRectangle1.nDown = traceRectangle1.C.Py;
+                    traceRectangle1.nLeft = traceRectangle1.A.Px;
+                    traceRectangle1.nRight = traceRectangle1.B.Px;
+                }
             }else{                                      //the trace projection is vertical
-                //Corner A of previous schema
-                traceRectangle1.A.Px = B.Px - Threshold;
-                traceRectangle1.A.Py = B.Py;
+                if(B.Py > A.Py) {
+                    //Corner A of previous schema
+                    traceRectangle1.A.Px = B.Px - Threshold;
+                    traceRectangle1.A.Py = B.Py;
 
-                //Corner B of previous schema
-                traceRectangle1.B.Px = B.Px + Threshold;
-                traceRectangle1.B.Py = B.Py;
+                    //Corner B of previous schema
+                    traceRectangle1.B.Px = B.Px + Threshold;
+                    traceRectangle1.B.Py = B.Py;
 
-                //Corner C of previous schema
-                traceRectangle1.C.Px = A.Px - Threshold;
-                traceRectangle1.C.Py = A.Py;
+                    //Corner C of previous schema
+                    traceRectangle1.C.Px = A.Px - Threshold;
+                    traceRectangle1.C.Py = A.Py;
 
-                //Corner D of previous schema
-                traceRectangle1.D.Px = A.Px + Threshold;
-                traceRectangle1.D.Py = A.Py;
+                    //Corner D of previous schema
+                    traceRectangle1.D.Px = A.Px + Threshold;
+                    traceRectangle1.D.Py = A.Py;
 
-                traceRectangle1.mPerpendicular = 0;
-                traceRectangle1.nTop = B.Py;
-                traceRectangle1.nDown = A.Py;
-                traceRectangle1.nLeft = traceRectangle1.A.Px;
-                traceRectangle1.nRight = traceRectangle1.B.Px;
+                    traceRectangle1.mPerpendicular = 0;
+                    traceRectangle1.nTop = B.Py;
+                    traceRectangle1.nDown = A.Py;
+                    traceRectangle1.nLeft = traceRectangle1.A.Px;
+                    traceRectangle1.nRight = traceRectangle1.B.Px;
+                }else{
+                    //Corner A of previous schema
+                    traceRectangle1.A.Px = A.Px - Threshold;
+                    traceRectangle1.A.Py = A.Py;
+
+                    //Corner B of previous schema
+                    traceRectangle1.B.Px = A.Px + Threshold;
+                    traceRectangle1.B.Py = A.Py;
+
+                    //Corner C of previous schema
+                    traceRectangle1.C.Px = B.Px - Threshold;
+                    traceRectangle1.C.Py = B.Py;
+
+                    //Corner D of previous schema
+                    traceRectangle1.D.Px = B.Px + Threshold;
+                    traceRectangle1.D.Py = B.Py;
+
+                    traceRectangle1.mPerpendicular = 0;
+                    traceRectangle1.nTop = A.Py;
+                    traceRectangle1.nDown = B.Py;
+                    traceRectangle1.nLeft = traceRectangle1.A.Px;
+                    traceRectangle1.nRight = traceRectangle1.B.Px;
+                }
             }
 
             if(traceRectangle1.B.Py < traceRectangle1.D.Py){
@@ -269,6 +317,18 @@ private:
             }else{
                 traceRectangle1.minYLeft = traceRectangle1.C.Py;
                 traceRectangle1.maxYLeft = traceRectangle1.A.Py;
+            }
+
+            if(traceRectangle1.B.Px < traceRectangle1.A.Px){
+                traceRectangle1.minXRight = traceRectangle1.A.Px;
+                traceRectangle1.minXRight = traceRectangle1.A.Px;
+                traceRectangle1.maxXLeft = traceRectangle1.B.Px;
+                traceRectangle1.minXLeft = traceRectangle1.B.Px;
+            }else{
+                traceRectangle1.minXRight = traceRectangle1.B.Px;
+                traceRectangle1.maxXRight = traceRectangle1.B.Px;
+                traceRectangle1.maxXLeft = traceRectangle1.A.Px;
+                traceRectangle1.minXLeft = traceRectangle1.A.Px;
             }
         }
     }
