@@ -338,7 +338,23 @@ private:
      * Given this rectangle will calculate if the leaf Node (Hit) is inside
      */
     bool hitIsInside(trace t, leafNode leaf){
+        if (traceRectangle1.validM) {
+            double n = leaf.Y - (traceRectangle1.mm * leaf.X);
 
+            // y = ((n1*m2)-(n2*m1))/(m2-m1) <- used to know the Y of the trace path which must be between
+            // 1 elements = leafNode    2 elements = trace
+            double y1 = ((n * traceRectangle1.mPerpendicular) - (traceRectangle1.nDown * traceRectangle1.mm)) / (traceRectangle1.mPerpendicular - traceRectangle1.mm);
+            double y2 = ((n * traceRectangle1.mPerpendicular) - (traceRectangle1.nTop * traceRectangle1.mm)) / (traceRectangle1.mPerpendicular - traceRectangle1.mm);
+
+            if ((traceRectangle1.nLeft < traceRectangle1.nRight && n <= traceRectangle1.nRight && n >= traceRectangle1.nLeft || traceRectangle1.nLeft > traceRectangle1.nRight && n >= traceRectangle1.nRight && n <= traceRectangle1.nLeft) && leaf.Y >= y1 && leaf.Y <= y2) {
+                return true;
+            }
+        }else{
+            if (traceRectangle1.minXLeft <= leaf.X && traceRectangle1.maxXRight >= leaf.X && traceRectangle1.minYRight <= leaf.Y && traceRectangle1.maxYRight >= leaf.Y){
+                return true;
+            }
+        }
+        return false;
     }
 
     /*
