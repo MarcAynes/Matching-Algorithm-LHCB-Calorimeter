@@ -439,9 +439,13 @@ private:
             }
 
             return false;
-        }else{
-
+        }else{ //trace have a vertical rectangle
+            //rectangles are intersecting
+            if (traceRectangle1.minXLeft <= node.xMax && traceRectangle1.maxXRight >= node.xMin && traceRectangle1.minYRight <= node.yMax && traceRectangle1.maxYRight >= node.yMin){
+                return true;
+            }
         }
+        return false;
     }
 
     double euclideanDistance(double x1, double y1, double x2, double y2){
