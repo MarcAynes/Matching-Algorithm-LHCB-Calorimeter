@@ -665,9 +665,9 @@ private:
 
                     for (int x = 0; x < 2; x++){
                         //if we are root node we will only have 2 elements, so we need to equal x else we may have the index in different positions
-                        int j = x == 0 ? currentIndexInParent : (current->parentNode->numNode - 1);
+                        unsigned int j = x == 0 ? currentIndexInParent : (current->parentNode->numNode - 1);
                         //initializing each new Node
-                        ((Node*) current->parentNode->node)[j].yMin = (double) 999999999999999999;
+                        ((Node*) current->parentNode->node)[j].yMin = (double) 99999999999999;
                         ((Node*) current->parentNode->node)[j].xMin = (double) 999999999999999999;
                         ((Node*) current->parentNode->node)[j].xMax = (double) -999999999999999999;
                         ((Node*) current->parentNode->node)[j].yMax = (double) -999999999999999999;
@@ -828,7 +828,7 @@ private:
 
                             //copying each child Node to its new parent Node (Node)
                             ((Node*) current->node)[j].numNode++; //rectangle have +1 leaf node (data point)
-                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node = auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
+                            ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node = (void*)auxNodes[ind].node; //adding Node data to its parent rectangle (Node)
                             ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].numNode = auxNodes[ind].numNode;
                             ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].xMax = auxNodes[ind].xMax;
                             ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
@@ -836,6 +836,12 @@ private:
                             ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
                             ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].leaf = auxNodes[ind].leaf;
                             ((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].parentNode = &((Node*)(current->node))[j];
+
+                            if(auxNodes[ind].leaf == false){
+                                for (int k = 0; k < auxNodes[ind].numNode; k++) {
+                                    ((Node*)((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)].node)[k].parentNode = &((Node*) ((Node*) current->node)[j].node)[((((Node*) current->node)[j].numNode) - 1)];
+                                }
+                            }
 
                             //modifying rectangle boundaries if needed
                             if (((Node*) current->node)[j].xMax < auxNodes[ind].xMax) {
@@ -955,6 +961,7 @@ public:
                 newLeaf.Hit = data[i][j];
                 insert(newLeaf, &root);
             }
+            break;
         }
     }
 
@@ -975,6 +982,7 @@ public:
                 searchTrace(traces[i][j], &root, &data);
                 possibleHits[i][j] = data;
             }
+            break;
         }
         return possibleHits;
     }
