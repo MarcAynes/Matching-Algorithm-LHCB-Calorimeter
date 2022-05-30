@@ -981,7 +981,9 @@ public:
                 prepareSearch(traces[i][j]);
                 searchTrace(traces[i][j], &root, &data);
                 possibleHits[i][j] = data;
+                possibleHits[i].push_back(vector<hit>());
             }
+            possibleHits[i].pop_back();
             break;
         }
         return possibleHits;
