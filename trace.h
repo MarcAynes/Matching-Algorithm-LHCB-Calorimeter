@@ -5,7 +5,7 @@
 #ifndef MATCHINGALGORITHM_TRACE_H
 #define MATCHINGALGORITHM_TRACE_H
 
-#define Threshold 1 //threshold in millimeters
+#define Threshold 4000 //threshold in millimeters
 #define MaxTraceHigh 12780 //Maximum Z where we will calculate the trace path
 
 class trace {
