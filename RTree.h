@@ -980,6 +980,7 @@ public:
                 data.emplace_back();
                 prepareSearch(traces[i][j]);
                 searchTrace(traces[i][j], &root, &data);
+                data.erase(data.begin());
                 possibleHits[i][j] = data;
                 possibleHits[i].push_back(vector<hit>());
             }
