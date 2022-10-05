@@ -5,6 +5,7 @@
 #include <vector>
 #include <cfloat>
 #include <bits/stdc++.h>
+#include <chrono>
 
 using namespace std;
 
@@ -900,7 +901,7 @@ private:
                             ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].yMin = auxNodes[ind].yMin;
                             ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].xMin = auxNodes[ind].xMin;
                             ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].yMax = auxNodes[ind].yMax;
-                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].leaf = auxNodes[ind].node;
+                            ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].leaf = auxNodes[ind].leaf;
                             ((Node*) ((Node*) current->parentNode->node)[j].node)[((((Node*) current->parentNode->node)[j].numNode) - 1)].parentNode = &(((Node*) current->parentNode->node)[j]);
 
                             //modifying current and new rectangle boundaries
@@ -922,7 +923,6 @@ private:
                         }
                     }
                 }
-                free(auxNodes);
             }
         }
     }
@@ -953,16 +953,27 @@ public:
      * Using recursive function be aware of the stack used and the stack available
      */
     void insert(vector<vector<hit>> data){
+        long hits = 0;
+        auto start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < data.size(); i++){
-            for (int j = 0; j < data[i].size(); j++) {
+            for (int j = 0; j < data[i].size();j++) {
                 leafNode newLeaf;
                 newLeaf.X = data[i][j].X;
                 newLeaf.Y = data[i][j].Y;
                 newLeaf.Hit = data[i][j];
                 insert(newLeaf, &root);
+                hits++;
             }
             break;
         }
+        auto end = std::chrono::high_resolution_clock::now();
+        printf("hits: %d\n", hits);
+        using std::chrono::duration_cast;
+        using std::chrono::duration;
+        using std::chrono::microseconds;
+
+        auto durations = duration_cast<microseconds>(end - start);
+        cout << durations.count() << " micros insert" << endl;
     }
 
     /*
@@ -974,16 +985,25 @@ public:
         possibleHits.emplace_back();
         for (int i = 0; i < traces.size(); i++) {
             possibleHits[i].emplace_back();
-            for (int j = 0; j < traces.size(); j++){
+            auto start = std::chrono::high_resolution_clock::now();
+            for (int j = 0; j < traces[i].size(); j++){
                 possibleHits[i][j].emplace_back();
                 vector<hit> data;
                 data.emplace_back();
                 prepareSearch(traces[i][j]);
                 searchTrace(traces[i][j], &root, &data);
                 data.erase(data.begin());
+
                 possibleHits[i][j] = data;
                 possibleHits[i].push_back(vector<hit>());
             }
+            auto end = std::chrono::high_resolution_clock::now();
+            using std::chrono::duration_cast;
+            using std::chrono::duration;
+            using std::chrono::microseconds;
+
+            auto durations = duration_cast<microseconds>(end - start);
+            cout << durations.count() << " pepe" << endl;
             possibleHits[i].pop_back();
             break;
         }
