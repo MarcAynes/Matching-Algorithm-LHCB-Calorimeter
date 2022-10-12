@@ -135,5 +135,18 @@ vector<vector<hit>> readFile(string fileName, vector<vector<trace>>* traces){
     return data;
 }
 
+void writeFile(vector<vector<hit>> input) {
+    std::ofstream file;
+    file.open ("result.csv");
+
+    for (int i = 0; i < input.size(); i++) {
+        for (int j = 0; j < input[i].size(); j++) {
+            file << i << "," << input[i][j].id << "\n";
+        }
+    }
+
+    file.close();
+}
+
 
 #endif //MATCHINGALGORITHM_DATAACQUISITION_H
